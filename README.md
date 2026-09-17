@@ -1,4 +1,4 @@
-# CloudWalk Payments Inc. — AML/CTF Monitoring Dashboard
+# AML/CTF Monitoring Dashboard
 
 > **Candidate:** Vitor Cruz | **Submission date:** 2026-08-24 | **Target role:** AML/CTF Analyst (US) — CloudWalk Payments Inc.
 > Part of the CloudWalk AML/CTF technical case submission. See `MANIFEST_AND_SIGNATURES.pdf` (package root) for the SHA-256 checksum and digital signature covering this file.
