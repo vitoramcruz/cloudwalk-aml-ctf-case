@@ -1,0 +1,53 @@
+Loading workbook...
+  32,348 txns | 501 customers | 100 merchants | 630 cards
+  Period: 2025-03-01 to 2025-11-07
+  Time-clustered device-sharing incidents found (>=3 customers/60min, high-risk MCC): 11
+  Distinct transactions implicated: 12
+  Confirmed shared IPs (>=3 customers, ECOM): 1
+  Chargeback-outlier merchants (>5% ratio): ['M3030']
+
+======================================================================
+CUSTOMER #1: C12105
+======================================================================
+  Emerson Garcia | country: US | risk_rating: low | PEP: False | KYC level: enhanced
+  Total transactions: 101 | Period: 2025-03-02 01:07:38+00:00 to 2025-11-03 16:28:14+00:00
+  Flagged transactions: 29 of 101
+  Distinct customers linked via shared device: 11
+  Distinct customers linked via shared IP: 11
+  Merchants shared with the other 2 target customers: 58 total (41 at high-risk MCC merchants -- the operationally relevant overlap)
+  Actual monthly volume: $1,545.00 vs expected $1,450.77 (+6%)
+  Actual avg ticket: $123.62 vs expected $27.77 (+345%)
+
+======================================================================
+CUSTOMER #2: C12451
+======================================================================
+  Emerson Anderson | country: CA | risk_rating: low | PEP: False | KYC level: standard
+  Total transactions: 97 | Period: 2025-03-05 02:44:53+00:00 to 2025-11-06 11:56:17+00:00
+  Flagged transactions: 32 of 97
+  Distinct customers linked via shared device: 11
+  Distinct customers linked via shared IP: 11
+  Merchants shared with the other 2 target customers: 54 total (40 at high-risk MCC merchants -- the operationally relevant overlap)
+  Actual monthly volume: $1,174.74 vs expected $8,877.66 (-87%)
+  Actual avg ticket: $97.87 vs expected $28.54 (+243%)
+
+======================================================================
+CUSTOMER #3: C12373
+======================================================================
+  Drew Smith | country: US | risk_rating: low | PEP: False | KYC level: standard
+  Total transactions: 108 | Period: 2025-03-02 13:59:58+00:00 to 2025-11-06 18:25:45+00:00
+  Flagged transactions: 30 of 108
+  Distinct customers linked via shared device: 11
+  Distinct customers linked via shared IP: 11
+  Merchants shared with the other 2 target customers: 52 total (37 at high-risk MCC merchants -- the operationally relevant overlap)
+  Actual monthly volume: $1,329.52 vs expected $10,847.05 (-88%)
+  Actual avg ticket: $100.70 vs expected $12.72 (+692%)
+
+======================================================================
+EXPORTING EXCEL WORKBOOK
+======================================================================
+  Wrote Timeline_C12105 (101 rows, 29 flagged)
+  Wrote Timeline_C12451 (97 rows, 32 flagged)
+  Wrote Timeline_C12373 (108 rows, 30 flagged)
+
+Saved workbook: /home/runner/work/cloudwalk-aml-qa/cloudwalk-aml-qa/qa_workspace/outputs/SAR_Evidence_Package_Top3.xlsx
+Sheets: ['Summary', 'Timeline_C12105', 'Timeline_C12451', 'Timeline_C12373', 'Relationship_Network', 'CDD_Profile_Analysis']

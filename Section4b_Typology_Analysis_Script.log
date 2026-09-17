@@ -1,0 +1,206 @@
+Loading workbook...
+  Transactions: 32,348 | Customers: 501 | Merchants: 100 | Cards: 630
+  Date range: 2025-03-01 00:00:50+00:00 -> 2025-11-07 23:43:56+00:00
+Data loaded and enriched.
+
+Weight table set: {
+  "T11_FATF_OFAC_JURISDICTION": 32,
+  "T10_SELF_MERCHANT": 25,
+  "T03_DEVICE_SHARING": 20,
+  "T09_IP_RING": 18,
+  "T08_CASH_IN_CASH_OUT": 16,
+  "T01_STRUCTURING": 16,
+  "T05_PEP_HIGH_RISK_MCC": 13,
+  "T02_CARD_TESTING": 10,
+  "T04_GEO_HOPPING_XBORDER": 10,
+  "T06_ECOM_NO_3DS": 8,
+  "T07_CHARGEBACK_OUTLIER": 8
+}
+
+[Typology 1] Structuring...
+  Band $980-995 in ALL high-risk MCCs: 104 txns (brief's confirmed count: 104)
+  Band $980-995 in target MCCs [6051,4829] only: 101 txns
+  Qualifying customers (>=3 txns/7d in high-risk MCC band): 6
+
+[Typology 2] Card Testing...
+  ECOM txns < $5: 254 (brief's confirmed universe: 254 txns, 70% decline, 22 unique cards)
+  Qualifying card-testing windows (5+ attempts/30min, 3+ merchants, w/ approval): 8
+
+[Typology 3] Device Sharing / Mule Ring...
+  Qualifying device-sharing windows (3+ customers/60min in high-risk MCC): 1
+  Max distinct customers within a strict 60-min window: 11
+  Reconciled confirmed extreme case: device dev_shared_4829 -> 12 distinct customers (full 66-min session, MCC 4829)
+
+[Typology 4] Geo-Hopping Cross-Border...
+  Total cross-border txns: 7479 (23.1%) (brief's confirmed: 7,479 / 23.1%)
+  Customers with >=3 high-risk-MCC cross-border txns: 342 (max cross-border share observed: 48% -- no customer is literally 100% exclusive in this dataset)
+
+[Typology 5] High-Risk MCC + PEP Combination...
+  Total PEP customers: 16 (brief's confirmed: 16)
+  PEPs transacting at high-risk MCC merchants: 16
+  Txns exceeding 2x expected ticket at high-risk MCC: 341
+
+[Typology 6] ECOM Without 3DS in High-Risk MCC...
+  KEYED ECOM txns (all-time): 5983 (33.8% of ECOM; brief's confirmed: 5,983 / 33.8%)
+  Customers with >=5 KEYED txns at high-risk MCC (full period): 297
+
+[Typology 7] Chargeback Ratio Outlier...
+  Portfolio baseline chargeback ratio: 0.73% (brief's confirmed baseline: ~1.5%)
+  Merchants above 5% chargeback ratio: 1
+  Top outlier: M3030 (ElectroHub #330) at 12.0% (brief's confirmed: M3030, ~12%)
+
+[Typology 8] Cash-In to Cash-Out (Layering)...
+  RAW (unfiltered) customers with txns in BOTH MCC 6011 and MCC 4829: 489 of 501 (97.6%) -- brief's confirmed: 489/501 (97.6%) -- NOT used for ranking, context only
+  Qualifying pairs (<=72h window, ratio>=80%, both legs>=$500): 1
+  Distinct customers with >=1 qualifying pair: 1
+
+[Typology 9] IP Address Ring...
+  IP rings (high-risk MCC): 1 | general: 0
+  Max distinct customers on one IP: 12 (brief's confirmed extreme case: 12)
+
+[Typology 10] Self-Merchant Behavior (Customer = Merchant UBO)...
+  Total UBO records across 100 merchants: 194
+  Full/fuzzy name matches (name alone, score>=88): 189
+  Of those, matches ALSO corroborated by exact date-of-birth: 0
+  FINDING: name collisions are attributable to the dataset's limited name-generation pool (customers and UBOs drawn from the same first/last-name lists), not real identity links -- 0 DOB-corroborated matches vs. a ~1-in-40 chance-collision rate expected by birth year alone. Self-merchant behavior is NOT CONFIRMED in this dataset and contributes no hits to the customer ranking. Raw name-only collisions are reported below for audit transparency only and are explicitly marked as unconfirmed / false-positive risk.
+  CONFIRMED self-merchant cases (name + DOB match, AND an actual transaction at own merchant): 0
+
+[Typology 11] FATF/OFAC Jurisdiction...
+  Customers from/documented in flagged jurisdictions: 3 (brief's confirmed: 1 Iranian passport + 2 Venezuelan = 3)
+  Cross-border txns by flagged-jurisdiction customers: 42
+  Distinct customers implicated: 3
+
+======================================================================
+COMPOSITE SCORING
+======================================================================
+
+Total customer-typology hit records: 752
+Distinct customers with at least one hit: 421
+
+Regulatory escalation floor applied to 1 OFAC-comprehensive-sanctions customer(s) (guarantees top-5 placement per program policy, independent of point score).
+
+Top 15 by final composite score (preview):
+   customer_id              full_name  final_score  n_distinct_typologies                                                                                 typologies
+0       C12105         Emerson Garcia   170.955000                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+1       C12451       Emerson Anderson   168.827913                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+2       C12373             Drew Smith   166.517773                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+3       C88888  Mohammad Reza Al-Sana   164.838400                      3                      [T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER, T11_FATF_OFAC_JURISDICTION]
+4       C12323           Elliot White   164.836000                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+5       C12474          Sawyer Harris   163.838400                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+6       C12025       Morgan Hernandez   162.610909                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+7       C12434          Taylor Miller   161.978870                      4                [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING]
+8       C12319           Quinn Harris   135.782400                      3                                         [T03_DEVICE_SHARING, T06_ECOM_NO_3DS, T09_IP_RING]
+9       C12308              Chris Lee   135.286667                      3                                 [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+10      C12176      Kendall Hernandez   134.910286                      3                                 [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+11      C12364            Drew Martin   106.720000                      2                                                          [T03_DEVICE_SHARING, T09_IP_RING]
+12      C12261           Jordan Lopez    94.332379                      4          [T01_STRUCTURING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T08_CASH_IN_CASH_OUT]
+13      C12260       Kendall Thompson    93.461333                      3                                 [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+14      C12297       Kendall Williams    77.632010                      4  [T04_GEO_HOPPING_XBORDER, T05_PEP_HIGH_RISK_MCC, T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER]
+
+Cluster-diversity cap applied: Top 10 includes 3 member(s) of the device/IP-ring cluster (capped at 3); 9 other high-scoring customers were bumped down by the cap and remain in the full ranked table / typology sheets.
+
+Total distinct flagged transactions: 4404
+
+Top 10 transactions (preview):
+    txn_id customer_id merchant_id   mcc  amount_usd  final_score                                                  typologies
+0  T332346      C12323       M3061  4829      886.45    53.016727  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+1  T332345      C12176       M3061  4829      970.63    51.968061  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+2  T332343      C12434       M3061  4829      967.86    51.944408  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+3  T332340      C12105       M3061  4829     1140.74    51.815061  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+4  T332336      C12025       M3061  4829      708.96    51.302788  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+5  T332339      C12308       M3061  4829      726.79    51.280727  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+6  T332337      C12474       M3061  4829      992.19    51.271021  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+7  T332342      C12373       M3061  4829      689.41    51.152257  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+8  T332338      C12451       M3061  4829      469.87    50.728437  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+9  T332347      C12260       M3061  4829      921.06    47.159467  [T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T09_IP_RING]
+
+======================================================================
+TOP 10 CUSTOMER NARRATIVES
+======================================================================
+
+--- C12105 (Emerson Garcia) | score 171.0 | typologies: T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING ---
+  * Full coordinated session on device dev_shared_4829, MCC 4829: 12 distinct customers over 66 min (12 txns, ~6-min cadence) -- exceeds the 60-min alert window by a boundary margin only; reported at full extent as a single scripted session (confirmed dataset extreme case)
+  * 4 high-risk-MCC cross-border txns (8% of their high-risk-MCC activity is cross-border), $1,857.43 across ['AE', 'CA', 'GB']
+  * 15 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (1 cross-border), $2,800.39 total -- DOUBLE RISK (no-auth + cross-border)
+  * Shared IP 45.129.55.210 with 12 distinct customers in ECOM transactions (IP_RING_HIGH_RISK_MCC)
+  Key txns: T300975, T301355, T301542, T303108, T304120, T306243
+
+--- C12451 (Emerson Anderson) | score 168.8 | typologies: T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING ---
+  * Full coordinated session on device dev_shared_4829, MCC 4829: 12 distinct customers over 66 min (12 txns, ~6-min cadence) -- exceeds the 60-min alert window by a boundary margin only; reported at full extent as a single scripted session (confirmed dataset extreme case)
+  * 6 high-risk-MCC cross-border txns (13% of their high-risk-MCC activity is cross-border), $1,133.23 across ['BR', 'CA', 'GB']
+  * 10 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (1 cross-border), $1,322.51 total -- DOUBLE RISK (no-auth + cross-border)
+  * Shared IP 45.129.55.210 with 12 distinct customers in ECOM transactions (IP_RING_HIGH_RISK_MCC)
+  Key txns: T307096, T307423, T308706, T309038, T310749, T312788
+
+--- C12373 (Drew Smith) | score 166.5 | typologies: T03_DEVICE_SHARING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T09_IP_RING ---
+  * Full coordinated session on device dev_shared_4829, MCC 4829: 12 distinct customers over 66 min (12 txns, ~6-min cadence) -- exceeds the 60-min alert window by a boundary margin only; reported at full extent as a single scripted session (confirmed dataset extreme case)
+  * 5 high-risk-MCC cross-border txns (10% of their high-risk-MCC activity is cross-border), $1,532.94 across ['AE', 'CA']
+  * 7 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (1 cross-border), $478.92 total -- DOUBLE RISK (no-auth + cross-border)
+  * Shared IP 45.129.55.210 with 12 distinct customers in ECOM transactions (IP_RING_HIGH_RISK_MCC)
+  Key txns: T303982, T307207, T307908, T313078, T315953, T326130
+
+--- C88888 (Mohammad Reza Al-Sana) | score 164.8 | typologies: T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER, T11_FATF_OFAC_JURISDICTION ---
+  * 5 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (0 cross-border), $531.72 total
+  * 1 chargeback(s) totaling $35.21 at outlier merchant M3030 (ElectroHub #330, 12.0% portfolio ratio, CHARGEBACK_RATIO_AUTO_SUSPEND)
+  * 9 cross-border txn(s) totaling $423.79 (OFAC_SANCTIONED_JURISDICTION_XBORDER), sanctions_match_score=0.84
+  Key txns: T300532, T301124, T301207, T308409, T310342, T315920
+
+--- C12261 (Jordan Lopez) | score 94.3 | typologies: T01_STRUCTURING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T08_CASH_IN_CASH_OUT ---
+  * 16 txns in $980.0-$995.0 band within 7 days (MCCs [4829, 6051]); total $15,839.46
+  * 6 high-risk-MCC cross-border txns (14% of their high-risk-MCC activity is cross-border), $4,151.04 across ['CA', 'GB']
+  * 7 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (1 cross-border), $861.50 total -- DOUBLE RISK (no-auth + cross-border)
+  * 1 ATM->remittance pair(s) within <=72h, ratio up to 135%, fastest turnaround 43.2h
+  Key txns: T302727, T306620, T308067, T310188, T310829, T321702
+
+--- C12297 (Kendall Williams) | score 77.6 | typologies: T04_GEO_HOPPING_XBORDER, T05_PEP_HIGH_RISK_MCC, T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER ---
+  * 5 high-risk-MCC cross-border txns (12% of their high-risk-MCC activity is cross-border), $482.60 across ['BR', 'CA', 'GB']
+  * PEP customer: 32 txn(s) at high-risk MCC merchants exceeding 2x expected ticket (max 28.6x), $6,162.83 total
+  * 7 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (2 cross-border), $1,251.78 total -- DOUBLE RISK (no-auth + cross-border)
+  * 1 chargeback(s) totaling $36.11 at outlier merchant M3030 (ElectroHub #330, 12.0% portfolio ratio, CHARGEBACK_RATIO_AUTO_SUSPEND)
+  Key txns: T300100, T300447, T301404, T302039, T302774, T303001
+
+--- C12313 (Hayden Martinez) | score 75.9 | typologies: T01_STRUCTURING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER ---
+  * 16 txns in $980.0-$995.0 band within 7 days (MCCs [4829, 6051]); total $15,818.70
+  * 6 high-risk-MCC cross-border txns (12% of their high-risk-MCC activity is cross-border), $1,637.41 across ['CA', 'GB']
+  * 9 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (0 cross-border), $1,600.14 total
+  * 1 chargeback(s) totaling $39.45 at outlier merchant M3030 (ElectroHub #330, 12.0% portfolio ratio, CHARGEBACK_RATIO_AUTO_SUSPEND)
+  Key txns: T300663, T301658, T302174, T304466, T308828, T308945
+
+--- C12286 (Sam Thompson) | score 67.4 | typologies: T02_CARD_TESTING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS, T07_CHARGEBACK_OUTLIER ---
+  * 30 sub-$5 ECOM attempts on card K35359 across 17 merchants in 30 min, with an approval
+  * 8 high-risk-MCC cross-border txns (20% of their high-risk-MCC activity is cross-border), $1,574.86 across ['BR', 'CA', 'GB']
+  * 8 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (1 cross-border), $903.87 total -- DOUBLE RISK (no-auth + cross-border)
+  * 1 chargeback(s) totaling $86.08 at outlier merchant M3030 (ElectroHub #330, 12.0% portfolio ratio, CHARGEBACK_RATIO_AUTO_SUSPEND)
+  Key txns: T300056, T302186, T304885, T307649, T308698, T315264
+
+--- C12331 (Jordan White) | score 63.2 | typologies: T01_STRUCTURING, T04_GEO_HOPPING_XBORDER, T06_ECOM_NO_3DS ---
+  * 16 txns in $980.0-$995.0 band within 7 days (MCCs [4829, 6051]); total $15,833.59
+  * 13 high-risk-MCC cross-border txns (20% of their high-risk-MCC activity is cross-border), $4,216.32 across ['AE', 'BR', 'CA', 'GB']
+  * 8 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (2 cross-border), $1,429.60 total -- DOUBLE RISK (no-auth + cross-border)
+  Key txns: T301859, T303646, T305458, T308287, T309374, T313775
+
+--- C12100 (Jordan Lopez) | score 62.7 | typologies: T04_GEO_HOPPING_XBORDER, T05_PEP_HIGH_RISK_MCC, T06_ECOM_NO_3DS ---
+  * 8 high-risk-MCC cross-border txns (22% of their high-risk-MCC activity is cross-border), $1,199.53 across ['AE', 'CA', 'GB']
+  * PEP customer: 28 txn(s) at high-risk MCC merchants exceeding 2x expected ticket (max 25.4x), $5,728.31 total
+  * 11 KEYED (no-3DS) ECOM txns at high-risk MCC merchants over the dataset period (3 cross-border), $1,158.14 total -- DOUBLE RISK (no-auth + cross-border)
+  Key txns: T300568, T302016, T302664, T302720, T304161, T305322
+
+======================================================================
+EXPORTING EXCEL WORKBOOK
+======================================================================
+  Wrote Summary, Top10_Customers, Top30_Transactions
+  Wrote T01_Structuring (6 rows)
+  Wrote T02_Card_Testing (8 rows)
+  Wrote T03_Device_Sharing (2 rows)
+  Wrote T04_Geo_Hopping_XBorder (342 rows)
+  Wrote T05_PEP_High_Risk_MCC (341 rows)
+  Wrote T06_ECOM_No_3DS (297 rows)
+  Wrote T07_Chargeback_Outlier (1 merchant rows + 44 customer-link rows)
+  Wrote T08_Cash_In_Cash_Out (1 rows)
+  Wrote T09_IP_Ring (1 rows)
+  Wrote T10_Self_Merchant (189 rows)
+  Wrote T11_FATF_OFAC_Jurisdiction (42 rows)
+  Wrote Full_Ranked_Customers (421 rows)
+
+Saved workbook: /home/runner/work/cloudwalk-aml-qa/cloudwalk-aml-qa/qa_workspace/outputs/AML_Suspect_Detection_Results.xlsx
+Sheets: ['Summary', 'Top10_Customers', 'Top30_Transactions', 'T01_Structuring', 'T02_Card_Testing', 'T03_Device_Sharing', 'T04_Geo_Hopping_XBorder', 'T05_PEP_High_Risk_MCC', 'T06_ECOM_No_3DS', 'T07_Chargeback_Outlier', 'T08_Cash_In_Cash_Out', 'T09_IP_Ring', 'T10_Self_Merchant', 'T11_FATF_OFAC_Jurisdiction', 'Full_Ranked_Customers']

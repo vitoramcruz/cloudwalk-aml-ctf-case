@@ -1,0 +1,77 @@
+%% Candidate: Vitor Cruz | Submission date: 2026-08-24
+%% Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.
+%% Part of the CloudWalk AML/CTF technical case submission.
+%% See MANIFEST_AND_SIGNATURES.pdf (package root) for the checksum/signature.
+
+flowchart TD
+
+subgraph KYBPJ["KYB / UBO-PJ — LEGAL-ENTITY (MERCHANT) ONBOARDING (ASYNCHRONOUS, TARGET SLA: 1-3 BUSINESS DAYS)"]
+    K1(["Start: merchant (legal-entity) application received"]) --> K2["Collect entity baseline data:<br/>dba_name, legal_name, registration_number,<br/>incorporation_country, primary_mcc,<br/>expected_monthly_volume, expected_avg_ticket"]
+    K2 --> K3["Collect beneficial-ownership declaration:<br/>beneficial_owners (name, country, dob,<br/>ownership_pct, PEP self-disclosure)<br/>for every owner &ge;10%"]
+    K3 --> K4{"Ownership declaration<br/>complete and sums<br/>to a coherent total?"}
+    K4 -- "No" --> K4R(["REJECT / RETURN:<br/>request corrected UBO declaration"])
+    K4 -- "Yes" --> K5["Screen entity-level:<br/>merchant name + registration_number<br/>against OFAC SDN / consolidated list<br/>(ofac_match_score)"]
+    K5 --> K6["Screen every declared UBO independently:<br/>name + DOB fuzzy match against<br/>OFAC SDN + PEP databases<br/>(per-UBO sanctions_match_score, pep_flag)"]
+    K6 --> K7{"Any single UBO<br/>individually &ge;50% AND<br/>domiciled/sanctioned in an<br/>OFAC-comprehensive jurisdiction?"}
+    K7 -- "Yes" --> K7E(["HARD STOP — OFAC 50% Rule<br/>(single-owner form):<br/>candidate blocked entity;<br/>escalate to OFAC Sanctions<br/>Compliance Officer before<br/>any activation"])
+    K7 -- "No" --> K8{"Do two or more<br/>sanctioned-jurisdiction UBOs<br/>aggregate to &ge;50%<br/>combined ownership?"}
+    K8 -- "Yes" --> K8E(["HARD STOP — OFAC 50% Rule<br/>(aggregate form):<br/>adjudicate each co-owner's<br/>blocked-person status<br/>independently before<br/>applying the aggregate test<br/>(see Section 2.b UBO Critical<br/>Case Report, Part 1a)"])
+    K8 -- "No" --> K9{"Any UBO is a PEP,<br/>OR any UBO domiciled in a<br/>FATF Grey/Black List country<br/>below the 50% threshold?"}
+    K9 -- "Yes" --> K9E["Route to EDD queue:<br/>mandatory enhanced due diligence<br/>(source-of-wealth, adverse media,<br/>senior-management approval)<br/>— does NOT block onboarding,<br/>unlike K7/K8"]
+    K9 -- "No" --> K10["Verify MSB registration<br/>(if primary_mcc requires one,<br/>e.g. money transfer / quasi-cash):<br/>msb_registration_number present<br/>and not expired?"]
+    K9E --> K10
+    K10 --> K11{"MSB registration<br/>required and missing<br/>or expired?"}
+    K11 -- "Yes" --> K11E(["HARD STOP:<br/>cannot activate a money-transfer /<br/>quasi-cash merchant without a<br/>valid MSB registration<br/>(31 CFR 1022.380)"])
+    K11 -- "No" --> K12["Compute merchant risk_rating<br/>and high_risk_mcc_flag from<br/>primary_mcc + UBO composite risk"]
+    K12 --> K13["Record last_kyb_refresh = onboarding<br/>completion timestamp<br/>(NOT an independent batch job —<br/>see data-integrity note below)"]
+    K13 --> K14(["APPROVED:<br/>activate merchant;<br/>enter periodic re-screening<br/>population per Task 7 cadence<br/>(6/12/24mo by risk tier)"])
+end
+
+subgraph DQ["DATA-INTEGRITY NOTE (Fase 7 root-cause finding — Section 1.b §10 / Section1b_AML_Program_Updates)"]
+    DQ1["30 of 100 merchants (30%) were found with<br/>last_kyb_refresh PRE-DATING onboarding_date<br/>(deltas 4-76 days, median approx 30 days).<br/>Root cause: an asynchronous batch refresh job,<br/>decoupled from this synchronous flow, appears to<br/>overwrite last_kyb_refresh independently of K13.<br/>This sub-flow's step K13 is the CORRECTED behavior;<br/>the anomaly is a pre-existing pipeline defect this<br/>diagram documents but does not yet enforce in production."]
+end
+
+K13 -.-> DQ1
+
+subgraph BUS2["ONBOARDING STATUS BUS — non-blocking status events"]
+    E1[/"status: UBO_DECLARATION_INCOMPLETE | UBO_DECLARATION_ACCEPTED"/]
+    E2[/"status: ENTITY_SANCTIONS_CLEAR | ENTITY_SANCTIONS_HIT"/]
+    E3[/"status: OFAC_50PCT_BLOCKED_SINGLE | OFAC_50PCT_BLOCKED_AGGREGATE | OFAC_50PCT_CLEAR"/]
+    E4[/"status: EDD_QUEUED | MSB_MISSING | APPROVED | REJECTED"/]
+end
+
+K4 -. emit .-> E1
+K4R -. emit .-> E1
+K5 -. emit .-> E2
+K6 -. emit .-> E2
+K7 -. emit .-> E3
+K7E -. emit .-> E3
+K8 -. emit .-> E3
+K8E -. emit .-> E3
+K9 -. emit .-> E4
+K9E -. emit .-> E4
+K11 -. emit .-> E4
+K11E -. emit .-> E4
+K14 -. emit .-> E4
+
+E1 --> DASH2[("Onboarding Dashboard<br/>real-time status API")]
+E2 --> DASH2
+E3 --> DASH2
+E4 --> DASH2
+
+classDef startEnd fill:#1F3864,color:#FFFFFF,stroke:#1F3864,stroke-width:1px;
+classDef decision fill:#FFE699,color:#000000,stroke:#BF8F00,stroke-width:1px;
+classDef process fill:#DDEBF7,color:#000000,stroke:#2E5395,stroke-width:1px;
+classDef approve fill:#C6E0B4,color:#000000,stroke:#548235,stroke-width:1px;
+classDef critical fill:#F4B183,color:#000000,stroke:#C00000,stroke-width:2px;
+classDef status fill:#E2D9F3,color:#000000,stroke:#7030A0,stroke-width:1px;
+classDef dash fill:#1F3864,color:#FFFFFF,stroke:#1F3864,stroke-width:2px;
+classDef note fill:#FCE4D6,color:#000000,stroke:#C00000,stroke-width:1px,stroke-dasharray: 3 2;
+
+class K1,K14 startEnd;
+class K4,K7,K8,K9,K11 decision;
+class K2,K3,K5,K6,K10,K12,K13,K9E process;
+class K4R,K7E,K8E,K11E critical;
+class E1,E2,E3,E4 status;
+class DASH2 dash;
+class DQ1 note;

@@ -1,0 +1,83 @@
+%% Candidate: Vitor Cruz | Submission date: 2026-08-24
+%% Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.
+%% Part of the CloudWalk AML/CTF technical case submission.
+%% See MANIFEST_AND_SIGNATURES.pdf (package root) for the checksum/signature.
+
+flowchart TD
+
+subgraph TRIGGERS["TRIGGER SOURCES (independent of onboarding sub-flows)"]
+    T1[("Scheduler:<br/>daily cron check<br/>against refresh cadence")]
+    T2[("Event: UBO change<br/>webhook from KYB system<br/>(ownership / control change)")]
+    T3[("Event: transactional alert<br/>(SQL detection rules, Task 3.1)")]
+    T4[("Event: adverse media /<br/>sanctions list update feed")]
+end
+
+subgraph BATCH["PERIODIC / EVENT-DRIVEN RE-SCREENING (BATCH, ASYNCHRONOUS, DECOUPLED FROM ONBOARDING)"]
+    R1{"Time-based check:<br/>months since last full refresh<br/>&ge; cadence?<br/>(24mo Low / 12mo Medium /<br/>6mo High, or 3mo if<br/>sanctions_match_score &gt; 0.7)"}
+    R2["Enqueue entity for<br/>off-cycle re-screening<br/>(customer, merchant, or UBO)"]
+    R3["Dequeue batch of entities<br/>from re-screening queue"]
+    R4["Re-run sanctions/PEP<br/>screening + country<br/>risk check"]
+    R5["Re-check OFAC 50% Rule<br/>for merchants: recompute<br/>aggregate UBO ownership<br/>by sanctioned country"]
+    R6["Recompute risk score<br/>and risk_rating"]
+    R7{"Material change detected?<br/>(new sanctions hit, PEP flag,<br/>risk_rating upgrade, or<br/>50% Rule newly triggered)"}
+    R8["No change:<br/>update last_screened_at;<br/>re-enter monitoring population<br/>at current cadence"]
+    R9["Trigger off-cycle case:<br/>escalate to Sanctions Compliance /<br/>Investigations for review"]
+    R10{"Case outcome"}
+    R11(["Risk rating updated;<br/>resume monitoring<br/>at new cadence"])
+    R12(["Account / merchant<br/>restricted or suspended<br/>pending EDD / SAR filing"])
+
+    R1 -- "Yes" --> R2
+    R1 -- "No" --> R8
+    R2 --> R3
+    R3 --> R4
+    R4 --> R5
+    R5 --> R6
+    R6 --> R7
+    R7 -- "No" --> R8
+    R7 -- "Yes" --> R9
+    R9 --> R10
+    R10 -- "Cleared / adjusted" --> R11
+    R10 -- "Restrict" --> R12
+    R8 -.-> R1
+    R11 -.-> R1
+end
+
+T1 --> R1
+T2 --> R2
+T3 --> R2
+T4 --> R2
+
+subgraph BUS3["ONBOARDING STATUS BUS — non-blocking status events"]
+    F1[/"status: RESCREEN_QUEUED<br/>(trigger=time|ubo_change|<br/>txn_alert|adverse_media)"/]
+    F2[/"status: RESCREEN_IN_PROGRESS"/]
+    F3[/"status: NO_CHANGE | MATERIAL_CHANGE_DETECTED"/]
+    F4[/"status: RATING_UPDATED | RESTRICTED"/]
+end
+
+R2 -. emit .-> F1
+R3 -. emit .-> F2
+R7 -. emit .-> F3
+R8 -. emit .-> F3
+R11 -. emit .-> F4
+R12 -. emit .-> F4
+
+F1 --> DASH3[("Onboarding Dashboard<br/>real-time status API")]
+F2 --> DASH3
+F3 --> DASH3
+F4 --> DASH3
+
+classDef trigger fill:#DDEBF7,color:#000000,stroke:#2E5395,stroke-width:1px,stroke-dasharray: 3 2;
+classDef decision fill:#FFE699,color:#000000,stroke:#BF8F00,stroke-width:1px;
+classDef process fill:#DDEBF7,color:#000000,stroke:#2E5395,stroke-width:1px;
+classDef approve fill:#C6E0B4,color:#000000,stroke:#548235,stroke-width:1px;
+classDef critical fill:#F4B183,color:#000000,stroke:#C00000,stroke-width:2px;
+classDef status fill:#E2D9F3,color:#000000,stroke:#7030A0,stroke-width:1px;
+classDef dash fill:#1F3864,color:#FFFFFF,stroke:#1F3864,stroke-width:2px;
+
+class T1,T2,T3,T4 trigger;
+class R1,R7,R10 decision;
+class R2,R3,R4,R5,R6,R8,R9 process;
+class R11 approve;
+class R12 critical;
+class F1,F2,F3,F4 status;
+class DASH3 dash;

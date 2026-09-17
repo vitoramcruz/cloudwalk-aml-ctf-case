@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<!--
+  Candidate: Vitor Cruz | Submission date: 2026-08-24
+  Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.
+  Part of the CloudWalk AML/CTF technical case submission.
+  See MANIFEST_AND_SIGNATURES.pdf (package root) for the SHA-256 checksum
+  and digital signature covering this file.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CloudWalk AML/CTF Monitoring Dashboard</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1a2233; --muted:#5b6472;
+    --line:#e6e9ef; --accent:#c0392b; --blue:#2c5f8a; --green:#27ae60;
+    --orange:#e67e22; --red:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       background:var(--bg); color:var(--ink);}
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{width:270px; background:#eef1f5; padding:24px 20px; border-right:1px solid var(--line); flex-shrink:0;}
+  .sidebar h2{font-size:17px; margin:0 0 2px 0; display:flex; align-items:center; gap:8px;}
+  .sidebar .sub{font-size:12.5px; color:var(--muted); margin-bottom:20px;}
+  .box{background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:16px;}
+  .box h4{margin:0 0 10px 0; font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted);}
+  .valrow{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px;}
+  .valrow .ok{color:var(--green); font-weight:600;}
+  .main{flex:1; padding:32px 40px; max-width:1180px;}
+  h1{font-size:28px; margin:0 0 4px 0;}
+  .tagline{color:var(--muted); font-size:14px; margin-bottom:22px;}
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px;}
+  .kpi .label{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+  .kpi .value{font-size:28px; font-weight:700;}
+  .kpi .delta{font-size:11.5px; color:var(--muted); margin-top:4px;}
+  .tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:22px;}
+  .tab{padding:10px 16px; font-size:14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; user-select:none;}
+  .tab.active{color:var(--accent); border-bottom-color:var(--accent); font-weight:600;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .grid2{display:grid; grid-template-columns:1.55fr 1fr; gap:22px; margin-bottom:24px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px;}
+  .card h3{margin:0 0 14px 0; font-size:16px;}
+  .caption{font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5;}
+  table{width:100%; border-collapse:collapse; font-size:12.8px;}
+  th{text-align:left; padding:8px 9px; border-bottom:2px solid var(--line); color:var(--muted); font-weight:600; white-space:nowrap;}
+  td{padding:8px 9px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tr:hover td{background:#fafbfc;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:12px; font-size:10.5px; font-weight:700;}
+  .badge.urgent{background:#fdecea; color:#c0392b;}
+  .badge.high{background:#fdf3e6; color:#b9660b;}
+  .badge.low{background:#e9f7ef; color:#1e8449;}
+  .badge.medium{background:#fef5e6; color:#b9770e;}
+  .rank1{background:#fff8e1;}
+  .typ-tag{display:inline-block; background:#eef2f7; color:#33475b; padding:1px 7px; border-radius:6px; font-size:10.5px; margin:1px 2px 1px 0; white-space:normal;}
+  .foot{margin-top:28px; padding-top:16px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.6;}
+  .snapshot-banner{background:#eaf1fb; border:1px solid #c9dcf5; color:#2c5f8a; border-radius:8px; padding:10px 14px; font-size:12.3px; margin-bottom:22px; line-height:1.5;}
+  .legend{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; font-size:11.5px;}
+  .legend span{display:flex; align-items:center; gap:5px;}
+  .sw{width:10px; height:10px; border-radius:2px; display:inline-block;}
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
+  .bar-row .lbl{width:190px; font-size:12.5px; text-align:right; flex-shrink:0; color:var(--ink);}
+  .bar-track{flex:1; background:#f0f2f5; border-radius:4px; height:20px; position:relative;}
+  .bar-fill{background:var(--blue); height:100%; border-radius:4px; display:flex; align-items:center;}
+  .bar-fill span{color:#fff; font-size:11px; font-weight:600; padding-left:8px; white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>🛡️ CloudWalk AML</h2>
+    <div class="sub">AML/CTF transaction-monitoring dashboard — static snapshot</div>
+
+    <div class="box">
+      <h4>Population validation</h4>
+      <div class="valrow"><span>✅ Customers</span><span class="ok">501 / 501</span></div>
+      <div class="valrow"><span>✅ Merchants</span><span class="ok">100 / 100</span></div>
+      <div class="valrow"><span>✅ Cards</span><span class="ok">630 / 630</span></div>
+      <div class="valrow"><span>✅ Transactions</span><span class="ok">32,348</span></div>
+    </div>
+
+    <div class="box">
+      <h4>Escalation / SAR settings</h4>
+      <div class="valrow"><span>SAR escalation cut</span><span>100</span></div>
+      <div class="valrow"><span>SARs filed</span><span>3</span></div>
+    </div>
+
+    <div class="box">
+      <h4>Typology weights (composite)</h4>
+      <div class="valrow"><span>FATF/OFAC jurisdiction</span><span>32</span></div>
+      <div class="valrow"><span>Self-merchant</span><span>25</span></div>
+      <div class="valrow"><span>Device sharing</span><span>20</span></div>
+      <div class="valrow"><span>IP ring</span><span>18</span></div>
+      <div class="valrow"><span>Cash-in/cash-out</span><span>16</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <h1>CloudWalk Payments Inc. — AML/CTF Monitoring Dashboard</h1>
+    <div class="tagline">Non-bank payment processor · sponsor-bank model · examiner-grade monitoring view</div>
+
+    <div class="snapshot-banner">
+      📸 This is a static snapshot of the dashboard in HTML with the real numbers already calculated
+      by the detection engine against <code>AMLFT_Analyst_JIM__1_.xlsx</code>. For the full
+      interactive version (upload a new file, drill down by customer/merchant, live threshold
+      simulator), use the <code>app.py</code> package + <code>streamlit run app.py</code> downloaded
+      earlier.
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total alerts</div><div class="value">421</div></div>
+      <div class="kpi"><div class="label">False-positive rate (proxy)</div><div class="value">97.1%</div><div class="delta">↑ 12 escalated</div></div>
+      <div class="kpi"><div class="label">SARs filed</div><div class="value">3</div></div>
+      <div class="kpi"><div class="label">Portfolio chargeback ratio</div><div class="value">0.73%</div></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="charts">📊 Portfolio charts</div>
+      <div class="tab" data-tab="top10">🏆 Top 10 suspicious customers</div>
+      <div class="tab" data-tab="edd">📋 EDD population</div>
+    </div>
+
+    <!-- TAB: CHARTS -->
+    <div class="panel active" id="tab-charts">
+      <div class="grid2">
+        <div class="card">
+          <h3>Monthly alert trend</h3>
+          <div id="trendChart"></div>
+          <div class="caption">Distinct transactions that contributed to ≥1 typology alert, by month (stacked).</div>
+        </div>
+        <div class="card">
+          <h3>Risk-rating distribution</h3>
+          <div id="riskChart"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Alerting customers by typology</h3>
+        <div id="typChart"></div>
+      </div>
+    </div>
+
+    <!-- TAB: TOP 10 -->
+    <div class="panel" id="tab-top10">
+      <div class="card">
+        <h3>Top 10 most suspicious customers</h3>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Customer ID</th><th>Name</th><th>Score</th><th># Typologies</th>
+            <th>Country</th><th>Risk rating</th><th>Typologies detected</th>
+          </tr></thead>
+          <tbody id="top10-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: EDD -->
+    <div class="panel" id="tab-edd">
+      <div class="kpis" style="grid-template-columns:repeat(3,1fr); margin-bottom:20px;">
+        <div class="kpi"><div class="label">EDD population</div><div class="value">242</div></div>
+        <div class="kpi"><div class="label">URGENT</div><div class="value">5</div></div>
+        <div class="kpi"><div class="label">HIGH</div><div class="value">14</div></div>
+      </div>
+      <div class="card">
+        <h3>URGENT + HIGH cases (top 19)</h3>
+        <table>
+          <thead><tr>
+            <th>Customer ID</th><th>Name</th><th>Country</th><th>Risk</th><th>Sanctions score</th>
+            <th>Doc issue</th><th>Criteria</th><th>Urgency</th><th>Deadline</th>
+          </tr></thead>
+          <tbody id="edd-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="foot">
+      Detection logic imported from <code>detection_engine.py</code> (extraction of Section4b +
+      Section2a). FPR shown is a <em>monitoring-model proxy</em>, not a QA-validated disposition
+      rate. SAR confidentiality (31 U.S.C. § 5318(g)(2)) applies to all downstream case handling.
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1200px;margin:24px auto 8px;padding:12px 20px;text-align:center;font:12px/1.5 -apple-system,Segoe UI,sans-serif;color:#666;border-top:1px solid #e2e2e2;">
+  Candidate: Vitor Cruz &nbsp;|&nbsp; Submission date: 2026-08-24 &nbsp;|&nbsp; Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.<br/>
+  Part of the CloudWalk AML/CTF technical case submission. See MANIFEST_AND_SIGNATURES.pdf (package root) for the SHA-256 checksum and digital signature covering this file.
+</div>
+
+<script>
+// ============================================================
+// EMBEDDED REAL DATA (computed by detection_engine.py against
+// AMLFT_Analyst_JIM__1_.xlsx)
+// ============================================================
+const DATA = {
+  months: ["2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11"],
+  trend_series: {"Card testing": [0, 30, 60, 30, 90, 30, 0, 0, 0], "Cash-in / cash-out": [0, 0, 0, 2, 0, 0, 0, 0, 0], "Chargeback outlier": [7, 3, 9, 2, 8, 4, 2, 8, 1], "Device sharing / mule ring": [0, 0, 0, 0, 0, 0, 0, 11, 0], "ECOM without 3DS": [307, 297, 274, 296, 287, 270, 247, 263, 63], "FATF / OFAC jurisdiction": [6, 5, 8, 5, 5, 7, 2, 3, 1], "Geo-hopping cross-border": [227, 188, 229, 214, 201, 236, 215, 200, 51], "IP ring": [0, 0, 0, 0, 0, 0, 0, 12, 0], "PEP + high-risk MCC": [36, 41, 44, 33, 49, 35, 41, 48, 14], "Structuring": [0, 16, 16, 0, 0, 35, 29, 0, 0]},
+  risk_rating_dist: {"low": 363, "medium": 42, "high": 16},
+  typology_breakdown: [["Cash-in / cash-out", 1], ["FATF / OFAC jurisdiction", 3], ["Structuring", 6], ["Card testing", 8], ["IP ring", 12], ["Device sharing / mule ring", 12], ["PEP + high-risk MCC", 16], ["Chargeback outlier", 44], ["ECOM without 3DS", 297], ["Geo-hopping cross-border", 342]],
+  top10: [
+    {rank:1, customer_id:"C12105", full_name:"Emerson Garcia", final_score:170.96, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:2, customer_id:"C12451", full_name:"Emerson Anderson", final_score:168.83, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"CA", risk_rating:"low"},
+    {rank:3, customer_id:"C12373", full_name:"Drew Smith", final_score:166.52, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:4, customer_id:"C88888", full_name:"Mohammad Reza Al-Sana", final_score:164.84, n_distinct_typologies:3, typologies:["ECOM without 3DS","Chargeback outlier","FATF / OFAC jurisdiction"], country:"US", risk_rating:"medium"},
+    {rank:5, customer_id:"C12323", full_name:"Elliot White", final_score:164.84, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:6, customer_id:"C12474", full_name:"Sawyer Harris", final_score:163.84, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:7, customer_id:"C12025", full_name:"Morgan Hernandez", final_score:162.61, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:8, customer_id:"C12434", full_name:"Taylor Miller", final_score:161.98, n_distinct_typologies:4, typologies:["Device sharing / mule ring","Geo-hopping cross-border","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:9, customer_id:"C12319", full_name:"Quinn Harris", final_score:135.78, n_distinct_typologies:3, typologies:["Device sharing / mule ring","ECOM without 3DS","IP ring"], country:"US", risk_rating:"low"},
+    {rank:10, customer_id:"C12308", full_name:"Chris Lee", final_score:135.29, n_distinct_typologies:3, typologies:["Device sharing / mule ring","Geo-hopping cross-border","IP ring"], country:"US", risk_rating:"low"}
+  ],
+  edd_top: [
+    {customer_id:"C88888", full_name:"Mohammad Reza Al-Sana", country:"US", risk_rating:"medium", sanctions_match_score:0.84, doc_issue_country:"IR", criteria_codes:"A, E, F, I, K", urgency:"URGENT", deadline:"24-48 hours"},
+    {customer_id:"C12380", full_name:"Jordan Lee", country:"US", risk_rating:"high", sanctions_match_score:0.22, doc_issue_country:"US", criteria_codes:"B, D, F, J, K", urgency:"URGENT", deadline:"24-48 hours"},
+    {customer_id:"C12427", full_name:"Casey Smith", country:"US", risk_rating:"high", sanctions_match_score:0.20, doc_issue_country:"US", criteria_codes:"B, J", urgency:"URGENT", deadline:"24-48 hours"},
+    {customer_id:"C12183", full_name:"Hayden Davis", country:"US", risk_rating:"high", sanctions_match_score:0.11, doc_issue_country:"US", criteria_codes:"B, J", urgency:"URGENT", deadline:"24-48 hours"},
+    {customer_id:"C12470", full_name:"Parker Martinez", country:"US", risk_rating:"high", sanctions_match_score:0.02, doc_issue_country:"US", criteria_codes:"B, J", urgency:"URGENT", deadline:"24-48 hours"},
+    {customer_id:"C12100", full_name:"Jordan Lopez", country:"US", risk_rating:"high", sanctions_match_score:0.18, doc_issue_country:"US", criteria_codes:"B, F, K", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12480", full_name:"Riley White", country:"VE", risk_rating:"low", sanctions_match_score:0.15, doc_issue_country:"VE", criteria_codes:"C, H, K", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12456", full_name:"Quinn Martinez", country:"US", risk_rating:"high", sanctions_match_score:0.14, doc_issue_country:"US", criteria_codes:"B, K", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12282", full_name:"Riley Rodriguez", country:"US", risk_rating:"high", sanctions_match_score:0.13, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12201", full_name:"Rowan Jackson", country:"US", risk_rating:"high", sanctions_match_score:0.09, doc_issue_country:"US", criteria_codes:"B, F, K", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12391", full_name:"Rowan Thompson", country:"US", risk_rating:"high", sanctions_match_score:0.08, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12257", full_name:"Remy Davis", country:"VE", risk_rating:"low", sanctions_match_score:0.06, doc_issue_country:"VE", criteria_codes:"C, H", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12012", full_name:"Remy Garcia", country:"US", risk_rating:"high", sanctions_match_score:0.06, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12300", full_name:"Remy Martin", country:"US", risk_rating:"high", sanctions_match_score:0.05, doc_issue_country:"US", criteria_codes:"B, F, K", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12152", full_name:"Casey Martin", country:"US", risk_rating:"high", sanctions_match_score:0.05, doc_issue_country:"US", criteria_codes:"B, D", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12220", full_name:"Riley Hernandez", country:"US", risk_rating:"high", sanctions_match_score:0.04, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12350", full_name:"Casey Martinez", country:"US", risk_rating:"high", sanctions_match_score:0.02, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12001", full_name:"Cameron Taylor", country:"US", risk_rating:"high", sanctions_match_score:0.02, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"},
+    {customer_id:"C12297", full_name:"Kendall Williams", country:"US", risk_rating:"high", sanctions_match_score:0.01, doc_issue_country:"US", criteria_codes:"B", urgency:"HIGH", deadline:"7 calendar days"}
+  ]
+};
+
+// ---- Tabs ----
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+const PALETTE = ["#2c5f8a","#5b9bd5","#e67e22","#f1c40f","#27ae60","#8e44ad","#c0392b","#16a085","#7f8c8d","#d35400"];
+const monthNames = {'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'};
+
+// ==================== SVG STACKED BAR: Monthly trend ====================
+function renderTrendChart(){
+  const typNames = Object.keys(DATA.trend_series);
+  const months = DATA.months;
+  const W = 620, H = 300, padL = 40, padB = 34, padT = 10, padR = 6;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const nBars = months.length;
+  const gap = 14;
+  const barW = (plotW - gap*(nBars-1)) / nBars;
+
+  const totals = months.map((_,mi)=> typNames.reduce((s,t)=> s + DATA.trend_series[t][mi], 0));
+  const maxTotal = Math.max(...totals);
+  const niceMax = Math.ceil(maxTotal/100)*100;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H+34}" style="width:100%; height:auto; font-family:inherit;">`;
+  const ticks = 6;
+  for(let i=0;i<=ticks;i++){
+    const val = Math.round(niceMax * i/ticks);
+    const y = padT + plotH - (val/niceMax)*plotH;
+    svg += `<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="#eef0f3" stroke-width="1"/>`;
+    svg += `<text x="${padL-6}" y="${y+3}" font-size="9.5" fill="#8a93a3" text-anchor="end">${val}</text>`;
+  }
+  months.forEach((m,mi)=>{
+    const x = padL + mi*(barW+gap);
+    let yCursor = padT + plotH;
+    typNames.forEach((t,ti)=>{
+      const v = DATA.trend_series[t][mi];
+      if(v<=0) return;
+      const h = (v/niceMax)*plotH;
+      yCursor -= h;
+      svg += `<rect x="${x.toFixed(1)}" y="${yCursor.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${PALETTE[ti%PALETTE.length]}">
+        <title>${t}: ${v} (${m})</title></rect>`;
+    });
+    const [y,mo] = m.split('-');
+    svg += `<text x="${(x+barW/2).toFixed(1)}" y="${H+8}" font-size="10" fill="#5b6472" text-anchor="middle">${monthNames[mo]} ${y}</text>`;
+  });
+  svg += `</svg>`;
+
+  const legend = `<div class="legend">${typNames.map((t,i)=>
+    `<span><span class="sw" style="background:${PALETTE[i%PALETTE.length]}"></span>${t}</span>`).join('')}</div>`;
+
+  document.getElementById('trendChart').innerHTML = svg + legend;
+}
+
+// ==================== SVG DONUT: Risk rating distribution ====================
+function renderRiskChart(){
+  const colors = {low:'#27ae60', medium:'#e67e22', high:'#c0392b', unknown:'#7f8c8d'};
+  const entries = Object.entries(DATA.risk_rating_dist);
+  const total = entries.reduce((s,[,v])=>s+v,0);
+  const cx=110, cy=110, r=80, rInner=48;
+  let angle = -Math.PI/2;
+  let paths = '';
+  entries.forEach(([k,v])=>{
+    const frac = v/total;
+    const a0 = angle;
+    const a1 = angle + frac*2*Math.PI;
+    angle = a1;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const xi0 = cx + rInner*Math.cos(a1), yi0 = cy + rInner*Math.sin(a1);
+    const xi1 = cx + rInner*Math.cos(a0), yi1 = cy + rInner*Math.sin(a0);
+    const large = (a1-a0) > Math.PI ? 1 : 0;
+    paths += `<path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}
+      L ${xi0.toFixed(2)} ${yi0.toFixed(2)} A ${rInner} ${rInner} 0 ${large} 0 ${xi1.toFixed(2)} ${yi1.toFixed(2)} Z"
+      fill="${colors[k]}"><title>${k}: ${v} (${(frac*100).toFixed(1)}%)</title></path>`;
+  });
+  const svg = `<svg viewBox="0 0 220 220" style="width:220px; height:220px; display:block; margin:0 auto;">${paths}
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="20" font-weight="700" fill="#1a2233">${total}</text>
+    <text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="10.5" fill="#5b6472">customers</text>
+  </svg>`;
+  const legend = `<div class="legend" style="justify-content:center">${entries.map(([k,v])=>
+    `<span><span class="sw" style="background:${colors[k]}"></span>${k} (${v}, ${(v/total*100).toFixed(1)}%)</span>`).join('')}</div>`;
+  document.getElementById('riskChart').innerHTML = svg + legend;
+}
+
+// ==================== HORIZONTAL BARS: typology breakdown ====================
+function renderTypChart(){
+  const data = DATA.typology_breakdown;
+  const max = Math.max(...data.map(d=>d[1]));
+  let html = '';
+  data.slice().reverse().forEach(([label,val])=>{
+    const pct = Math.max(3, (val/max*100));
+    html += `<div class="bar-row">
+      <div class="lbl">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"><span>${val}</span></div></div>
+    </div>`;
+  });
+  document.getElementById('typChart').innerHTML = html;
+}
+
+renderTrendChart();
+renderRiskChart();
+renderTypChart();
+
+// ---- Top 10 table ----
+const t10body = document.getElementById('top10-body');
+DATA.top10.forEach(r=>{
+  const tr = document.createElement('tr');
+  if(r.rank===1) tr.classList.add('rank1');
+  const tags = r.typologies.map(t=>`<span class="typ-tag">${t}</span>`).join('');
+  tr.innerHTML = `<td><strong>#${r.rank}</strong></td><td>${r.customer_id}</td><td>${r.full_name}</td>
+    <td>${r.final_score.toFixed(1)}</td><td>${r.n_distinct_typologies}</td><td>${r.country}</td>
+    <td><span class="badge ${r.risk_rating}">${r.risk_rating}</span></td><td>${tags}</td>`;
+  t10body.appendChild(tr);
+});
+
+// ---- EDD table ----
+const eddBody = document.getElementById('edd-body');
+DATA.edd_top.forEach(r=>{
+  const tr = document.createElement('tr');
+  const urgClass = r.urgency==='URGENT' ? 'urgent':'high';
+  tr.innerHTML = `<td>${r.customer_id}</td><td>${r.full_name}</td><td>${r.country}</td>
+    <td><span class="badge ${r.risk_rating}">${r.risk_rating}</span></td>
+    <td>${r.sanctions_match_score.toFixed(2)}</td><td>${r.doc_issue_country}</td>
+    <td>${r.criteria_codes}</td><td><span class="badge ${urgClass}">${r.urgency}</span></td><td>${r.deadline}</td>`;
+  eddBody.appendChild(tr);
+});
+</script>
+</body>
+</html>

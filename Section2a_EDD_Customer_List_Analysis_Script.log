@@ -1,0 +1,31 @@
+Real population loaded: 501 customers, 630 cards
+
+Total customers triggering >= 1 EDD criterion: 242 of 501
+
+Validation — C88888 in EDD population: True
+Validation — VE customers in EDD population: 2 (expect 2)
+Validation — blocked+PEP customers in EDD population: 4
+Validation — Criterion K population (K in codes): 214 (playbook cites 214 dataset-wide)
+
+Urgency breakdown:
+urgency
+MEDIUM    223
+HIGH       14
+URGENT      5
+Name: count, dtype: int64
+
+Full EDD population: 242
+Priority (URGENT+HIGH) case file: 19
+
+Top 10 priority cases:
+  customer_id              full_name country urgency criteria_codes
+0      C88888  Mohammad Reza Al-Sana      US  URGENT  A, E, F, I, K
+1      C12380             Jordan Lee      US  URGENT  B, D, F, J, K
+2      C12427            Casey Smith      US  URGENT           B, J
+3      C12183           Hayden Davis      US  URGENT           B, J
+4      C12470        Parker Martinez      US  URGENT           B, J
+5      C12100           Jordan Lopez      US    HIGH        B, F, K
+6      C12480            Riley White      VE    HIGH        C, H, K
+7      C12456         Quinn Martinez      US    HIGH           B, K
+8      C12282        Riley Rodriguez      US    HIGH              B
+9      C12201          Rowan Jackson      US    HIGH        B, F, K

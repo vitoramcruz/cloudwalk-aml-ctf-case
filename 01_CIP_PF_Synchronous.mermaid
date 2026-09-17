@@ -1,0 +1,60 @@
+%% Candidate: Vitor Cruz | Submission date: 2026-08-24
+%% Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.
+%% Part of the CloudWalk AML/CTF technical case submission.
+%% See MANIFEST_AND_SIGNATURES.pdf (package root) for the checksum/signature.
+
+flowchart TD
+
+subgraph CIPPF["CIP-PF — INDIVIDUAL IDENTITY VERIFICATION (SYNCHRONOUS, TARGET SLA: MINUTES)"]
+    P1(["Start: individual application received"]) --> P2["Collect CIP baseline data:<br/>full_name, dob, ssn_last4, address,<br/>country, email, phone, occupation"]
+    P2 --> P3["Collect identity document:<br/>document_type, document_id,<br/>doc_issue_country, doc_expiry_date"]
+    P3 --> P4{"Document authentic,<br/>legible and not expired?"}
+    P4 -- "No" --> P4R(["REJECT:<br/>request re-submission"])
+    P4 -- "Yes" --> P5["Run BASIC sanctions check:<br/>name + DOB fuzzy match against<br/>OFAC SDN list only<br/>(no PEP / no country risk here)"]
+    P5 --> P6{"sanctions_match_score<br/>&gt; 0.7 ?"}
+    P6 -- "Yes" --> P6E["Do NOT approve synchronously;<br/>hand off to shared EDD queue<br/>(escalation, not this sub-flow)"]
+    P6 -- "No" --> P7{"doc_issue_country in<br/>OFAC comprehensive list?<br/>(IR, KP, SY, CU)"}
+    P7 -- "Yes" --> P7E["Do NOT approve synchronously;<br/>hand off to shared EDD queue"]
+    P7 -- "No" --> P8["Compute preliminary CIP risk flag<br/>(identity + basic sanctions inputs only)"]
+    P8 --> P9{"Synchronous decision<br/>(&le; 5 min SLA)"}
+    P9 -- "Clear" --> P10(["APPROVED (PROVISIONAL):<br/>activate basic account now;<br/>enqueue full risk scoring, PEP<br/>and country-risk checks<br/>as an async follow-up job"])
+    P9 -- "Reject" --> P10R(["REJECT application"])
+    P6E --> P11(["HANDOFF: PENDING EDD<br/>(consumed by shared async<br/>EDD workflow, outside<br/>this synchronous path)"])
+    P7E --> P11
+end
+
+subgraph BUS1["ONBOARDING STATUS BUS — non-blocking status events"]
+    D1[/"status: DOC_VALIDATED | DOC_REJECTED"/]
+    D2[/"status: SANCTIONS_CLEAR | SANCTIONS_HIT"/]
+    D3[/"status: APPROVED_PROVISIONAL | PENDING_EDD | REJECTED"/]
+end
+
+P4 -. emit .-> D1
+P4R -. emit .-> D1
+P5 -. emit .-> D2
+P9 -. emit .-> D3
+P10 -. emit .-> D3
+P10R -. emit .-> D3
+P11 -. emit .-> D3
+
+D1 --> DASH1[("Onboarding Dashboard<br/>real-time status API")]
+D2 --> DASH1
+D3 --> DASH1
+
+classDef startEnd fill:#1F3864,color:#FFFFFF,stroke:#1F3864,stroke-width:1px;
+classDef decision fill:#FFE699,color:#000000,stroke:#BF8F00,stroke-width:1px;
+classDef reject fill:#F8CBAD,color:#000000,stroke:#C00000,stroke-width:1px;
+classDef approve fill:#C6E0B4,color:#000000,stroke:#548235,stroke-width:1px;
+classDef process fill:#DDEBF7,color:#000000,stroke:#2E5395,stroke-width:1px;
+classDef handoff fill:#F4B183,color:#000000,stroke:#C00000,stroke-width:2px;
+classDef status fill:#E2D9F3,color:#000000,stroke:#7030A0,stroke-width:1px;
+classDef dash fill:#1F3864,color:#FFFFFF,stroke:#1F3864,stroke-width:2px;
+
+class P1 startEnd;
+class P10 approve;
+class P4R,P10R reject;
+class P6E,P11 handoff;
+class P4,P6,P7,P9 decision;
+class P2,P3,P5,P8 process;
+class D1,D2,D3 status;
+class DASH1 dash;

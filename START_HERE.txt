@@ -1,0 +1,34 @@
+CLOUDWALK AML MONITORING DASHBOARD — QUICK START
+=================================================
+
+Candidate: Vitor Cruz | Submission date: 2026-08-24
+Target role: AML/CTF Analyst (US) — CloudWalk Payments Inc.
+Part of the CloudWalk AML/CTF technical case submission. See
+MANIFEST_AND_SIGNATURES.pdf (package root) for the SHA-256 checksum and
+digital signature covering this file.
+
+Two ways to view this dashboard:
+
+1) INSTANT PREVIEW (no install) -> open dashboard_click_to_open.html
+   directly in any web browser (double-click it). This is a static
+   snapshot with the real computed numbers embedded, in English.
+
+2) FULL INTERACTIVE APP (upload new files, drill-down, live simulator):
+
+   python3 -m venv .venv
+   source .venv/bin/activate          (Windows: .venv\Scripts\activate)
+   pip install -r requirements.txt
+   streamlit run app.py
+
+   The browser opens automatically at http://localhost:8501
+   Upload the AML workbook (.xlsx) in the sidebar.
+
+Files:
+  dashboard_click_to_open.html -> static preview, opens directly, no install
+  app.py                       -> full Streamlit interface
+  detection_engine.py          -> importable detection engine (11 typologies + EDD)
+  requirements.txt             -> dependencies
+  README.md                    -> full documentation
+  previews/                    -> screenshots of both versions running
+
+Full details, architecture and deployment notes: see README.md
