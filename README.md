@@ -1,7 +1,7 @@
 AML/CTF Compliance System — End-to-End Technical Case
 CloudWalk Payments Inc. · Non-bank payment processor · FinCEN-regulated · Sponsor-bank model
 
-Author: Vitor Cruz Completed: August 2026 · This repository contains the full deliverables package I produced as part of CloudWalk's AML/CTF Analyst (US) technical selection case. Every figure has been independently computed and verified against the master dataset.
+Author: Vitor Cruz Completed: August 2026 · This repository contains the full deliverables package I produced as part of CloudWalk’s AML/CTF Analyst (US) technical selection case. Every figure has been independently computed and verified against the master dataset.
 
 🔍 What this project is
 
@@ -10,74 +10,74 @@ A complete, production-grade AML/CTF compliance program built from scratch over 
 The centerpiece is a Python detection engine that scores every customer across 11 independent typologies and surfaces the most suspicious accounts for investigation. A Streamlit dashboard wraps it with an interactive UI, live alert simulator, and entity drill-down. The SQL layer provides 12 parameterized PostgreSQL detection queries deployable in a real case-management environment.
 
 🚨 Key Findings
-Finding	Detail
-Money mule ring uncovered	12 coordinated accounts on a single device (dev_shared_4829) and single IP (45.129.55.210), executing $9,664.92 in scripted remittances at MCC 4829 in a 66-minute session
-SAR filed	FinCEN Form 111 (Initial), 12 subjects, $82,226.25 aggregate throughput — money laundering + suspicious use of multiple accounts + cyber indicators
-Top 10 alerts worked	9 recommended to file, 1 escalated for OFAC-nexus review
-EDD population	242 of 501 customers (48.3%) flagged across criteria A–K
-Structuring detected	104 transactions in the $980–$995 band across the review period
-Chargeback outlier	Merchant M3030 (ElectroHub #330) at 12.0% vs. 0.73% portfolio baseline
-OFAC escalation	1 customer with sanctions-match score above regulatory floor, guaranteed top-5 placement independent of composite score
+Finding Detail
+Money mule ring uncovered 12 coordinated accounts on a single device (dev_shared_4829) and single IP (45.129.55.210), executing $9,664.92 in scripted remittances at MCC 4829 in a 66-minute session
+SAR filed FinCEN Form 111 (Initial), 12 subjects, $82,226.25 aggregate throughput — money laundering + suspicious use of multiple accounts + cyber indicators
+Top 10 alerts worked 9 recommended to file, 1 escalated for OFAC-nexus review
+EDD population 242 of 501 customers (48.3%) flagged across criteria A–K
+Structuring detected 104 transactions in the $980–$995 band across the review period
+Chargeback outlier Merchant M3030 (ElectroHub #330) at 12.0% vs. 0.73% portfolio baseline
+OFAC escalation 1 customer with sanctions-match score above regulatory floor, guaranteed top-5 placement independent of composite score
+
 📁 Repository Structure
-├── app.py                                        # Streamlit dashboard (UI layer)
-├── detection_engine.py                           # 11-typology detection engine (importable)
-├── requirements.txt                              # Python dependencies
-│
-├── Section2a_EDD_Customer_List_Analysis_Script.py  # EDD population detector (criteria A–K)
-├── Section4a_SQL_Detection_Queries.sql            # 12 parameterized PostgreSQL alert rules
+├── app.py # Streamlit dashboard (UI layer)
+├── detection_engine.py # 11-typology detection engine (importable)
+├── requirements.txt # Python dependencies
+├── Section2a_EDD_Customer_List_Analysis_Script.py # EDD population detector (criteria A–K)
+├── Section4a_SQL_Detection_Queries.sql # 12 parameterized PostgreSQL alert rules
 ├── Section4a_T10_SelfMerchant_Correction_Script.py # T10 three-tier match model
-├── Section4b_Typology_Analysis_Script.py          # 11-typology composite scoring engine
-├── Section4b_Suspect_Timeline_Script.py           # SAR evidence: timelines + relationship network
-│
-├── dashboard_click_to_open.html                   # Static dashboard — open directly in browser
-│
-├── Section1a_AML_CTF_Risk_Assessment.pdf          # Risk matrix and inherent/residual scoring
-├── Section1b_AML_Program_Updates.pdf              # Proposed program updates (9 sections)
-├── Section2b_EDD_Remediation_Customer_C88888.pdf  # Individual EDD remediation — OFAC-nexus customer
+├── Section4b_Typology_Analysis_Script.py # 11-typology composite scoring engine
+├── Section4b_Suspect_Timeline_Script.py # SAR evidence: timelines + relationship network
+├── dashboard_click_to_open.html # Static dashboard — open directly in browser
+├── Section1a_AML_CTF_Risk_Assessment.pdf # Risk matrix and inherent/residual scoring
+├── Section1b_AML_Program_Updates.pdf # Proposed program updates (9 sections)
+├── Section2b_EDD_Remediation_Customer_C88888.pdf # Individual EDD remediation — OFAC-nexus customer
 ├── Section2b_KYB_Remediation_Merchants_M3004_M3025.pdf
 ├── Section2b_UBO_Critical_Case_Report.pdf
-├── Section3_Suspicious_Activity_Report_SAR.pdf    # Filed SAR — FinCEN Form 111 format
+├── Section3_Suspicious_Activity_Report_SAR.pdf # Filed SAR — FinCEN Form 111 format
 ├── Section4b_Casework_Narratives_Top10_Alerts.pdf # Regulator-ready Five-Ws narratives
-├── Section4c_Investigation_SLA_QA_Metrics.pdf     # SLA tiers, QA framework, precision/recall
+├── Section4c_Investigation_SLA_QA_Metrics.pdf # SLA tiers, QA framework, precision/recall
 ├── Section5_OCT_Crypto_OnRamp_Risk_Assessment.pdf # Pre-launch risk assessment (new products)
 ├── Section6a_FinCEN_Information_Request_Response.pdf
-├── Section7_LLM_AI_Workflows.pdf                  # LLM-assisted SAR drafting + alert triage proposal
-├── Reasoning_and_Methodology_CloudWalk_AML.pdf    # Problem → Hypotheses → Test → Decision
+├── Section7_LLM_AI_Workflows.pdf # LLM-assisted SAR drafting + alert triage proposal
+├── Reasoning_and_Methodology_CloudWalk_AML.pdf # Problem → Hypotheses → Test → Decision
 ├── Final_Presentation_Board_Examiner_Briefing.pdf
-│
-├── Section2a_EDD_Customer_List.xlsx               # 242-customer EDD population
+├── Section2a_EDD_Customer_List.xlsx # 242-customer EDD population
 ├── Section2b_UBO_Screening_Data_AllMerchants.xlsx # UBO screening, all 100 merchants
-├── Section4b_Typology_Analysis_Full_Dataset.xlsx  # Full typology hit table (421 customers)
-├── Section4b_Suspect_Timeline_PreSAR.xlsx         # Minute-by-minute timeline, top 3 subjects
-├── SAR_Evidence_Package_Top3.xlsx                 # SAR evidence package — C12105, C12451, C12373
-└── AML_KPI_Dashboard_Board_and_Examiner.xlsx      # KPI dashboard for board and examiner review
+├── Section4b_Typology_Analysis_Full_Dataset.xlsx # Full typology hit table (421 customers)
+├── Section4b_Suspect_Timeline_PreSAR.xlsx # Minute-by-minute timeline, top 3 subjects
+├── SAR_Evidence_Package_Top3.xlsx # SAR evidence package — C12105, C12451, C12373
+└── AML_KPI_Dashboard_Board_and_Examiner.xlsx # KPI dashboard for board and examiner review
+
 🛠️ Tech Stack
-Layer	Tools
-Detection engine	Python 3 · pandas · sliding-window anchor pattern
-Dashboard	Streamlit · Plotly
-SQL rules	PostgreSQL 16 · parameterized CTEs
-Data	openpyxl · Excel workbooks
-Reporting	PDF (regulatory format) · FinCEN Form 111
-AI/LLM layer	Workflow design: extractive summarization for SAR narrative drafting + Tier-1 alert triage
+Layer Tools
+Detection engine Python 3 · pandas · sliding-window anchor pattern
+Dashboard Streamlit · Plotly
+SQL rules PostgreSQL 16 · parameterized CTEs
+Data openpyxl · Excel workbooks
+Reporting PDF (regulatory format) · FinCEN Form 111
+AI/LLM layer Workflow design: extractive summarization for SAR narrative drafting + Tier-1 alert triage
+
 ⚡ Quick Start — Interactive Dashboard
 bash
-# 1. Clone the repository
+
+1. Clone the repository
 git clone https://github.com/YOUR_USERNAME/cloudwalk-aml-ctf-case.git
 cd cloudwalk-aml-ctf-case
 
-# 2. Create and activate a virtual environment
+2. Create and activate a virtual environment
 python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate # Windows: .venv\Scripts\activate
 
-# 3. Install dependencies
+3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run
+4. Run
 streamlit run app.py
 
 Upload AMLFT_Analyst_JIM.xlsx via the sidebar. The dashboard loads the full dataset and runs all 11 typologies automatically.
 
-No install needed? Open dashboard_click_to_open.html directly in any browser — it's a static snapshot with all computed numbers already embedded.
+No install needed? Open dashboard_click_to_open.html directly in any browser — it’s a static snapshot with all computed numbers already embedded.
 
 📋 Full Deliverables by Section
 Section 1 — AML/CTF Program & Framework
