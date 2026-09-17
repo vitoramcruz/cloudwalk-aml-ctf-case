@@ -105,10 +105,10 @@ Section 7 — AI / LLM Automation
 Workflow 1: LLM-assisted SAR narrative auto-draft (extractive, source-anchored)
 Workflow 2: Tier-1 alert triage summarization
 Governance controls, human-in-the-loop requirements, Lead Bank approval framework
+
 📌 Notes
 All data in this repository is synthetic — generated for the selection case. No real customer, merchant, or financial data is present.
 SAR-related documents are marked confidential under 31 U.S.C. § 5318(g)(2) as a formatting convention reflecting real-world SAR confidentiality requirements. No real SAR has been filed.
 The detection engine self-validates against documented case facts on every run (population counts, chargeback ratio, EDD count, structuring band count).
-📬 Contact
 
-Vitor Cruz · LinkedIn · Email
+📬 Contact - Vitor Cruz · LinkedIn · Email
